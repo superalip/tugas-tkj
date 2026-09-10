@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Untuk Cilpy</title>
+<style>
+  :root{
+    --bg-deep:#080b1c;
+    --bg-mid:#121736;
+    --bg-soft:#1b2350;
+    --gold:#d8ae6b;
+    --gold-soft:#eccb95;
+    --pink:#e9a8b6;
+    --ink:#f3efe4;
+    --ink-muted:#a6adcf;
+    --serif:Georgia,'Iowan Old Style','Palatino Linotype','Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    background:var(--bg-deep);
+    font-family:var(--sans);
+    color:var(--ink);
+    overflow:hidden;
+  }
+  #app{
+    position:fixed;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  /* starry sky */
+  #sky{
+    position:fixed;inset:0;z-index:0;
+    background:radial-gradient(ellipse at 50% -10%, var(--bg-soft), var(--bg-deep) 70%);
+    overflow:hidden;
+  }
+  .star{
+    position:absolute;border-radius:50%;
+    background:var(--ink);
+    opacity:.6;
+    animation:twinkle 3.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:.15;}
+    50%{opacity:.9;}
+  }
+  /* progress dots */
+  #progress{
+    position:fixed;top:calc(18px + env(safe-area-inset-top));left:50%;
+    transform:translateX(-50%);
+    display:flex;gap:7px;z-index:5;
+  }
+  #progress .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:rgba(255,255,255,.18);
+    transition:background .3s, transform .3s;
+  }
+  #progress .dot.on{background:var(--gold);transform:scale(1.3);}
+  /* sound toggle */
+  #soundBtn{
+    position:fixed;top:calc(14px + env(safe-area-inset-top));right:calc(14px + env(safe-area-inset-right));
+    z-index:5;
+    width:38px;height:38px;border-radius:50%;
+    border:1px solid rgba(216,174,107,.35);
+    background:rgba(255,255,255,.04);
+    color:var(--gold-soft);
+    font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  /* scenes */
+  .scene{
+    position:relative;z-index:1;
+    width:100%;max-width:400px;
+    padding:32px 26px;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:18px;
+  }
+  .scene.active{display:flex;animation:fadein .6s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .eyebrow-none{margin:0;}
+  h1{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:26px;
+    line-height:1.3;
+    margin:0;
+    color:var(--gold-soft);
+    letter-spacing:.2px;
+  }
+  p.sub{
+    margin:0;
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--ink-muted);
+    max-width:30ch;
+  }
+  .btn{
+    appearance:none;border:none;cursor:pointer;
+    font-family:var(--sans);
+    font-size:14.5px;
+    padding:13px 26px;
+    border-radius:999px;
+    background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+    color:#221604;
+    font-weight:600;
+    letter-spacing:.2px;
+    transition:transform .15s, opacity .3s;
+  }
+  .btn:active{transform:scale(.96);}
+  .btn.ghost{
+    background:transparent;
+    border:1px solid rgba(216,174,107,.5);
+    color:var(--gold-soft);
+    font-weight:500;
+  }
+  .btn[hidden]{display:none;}
+  .btn:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var(--gold-soft);outline-offset:3px;}
+
+  /* SCENE 1: vinyl */
+  .vinyl-wrap{
+    width:168px;height:168px;
+    margin:6px 0 2px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #vinylBtn{
+    background:none;border:none;cursor:pointer;
+    padding:0;width:100%;height:100%;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #vinyl{
+    width:100%;height:100%;
+    transform-origin:50% 50%;
+  }
+  #vinyl.spinning{animation:spin 4s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .hint-tap{font-size:12px;color:var(--ink-muted);opacity:.8;}
+
+  /* SCENE 2: stars puzzle */
+  .tiles{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+  .tile{
+    width:32px;height:38px;border-radius:8px;
+    border:1px solid rgba(216,174,107,.4);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-size:18px;color:var(--gold-soft);
+    background:rgba(255,255,255,.03);
+  }
+  .starfield{
+    position:relative;width:280px;height:190px;margin:4px 0;
+  }
+  .pickstar{
+    position:absolute;
+    width:34px;height:34px;
+    border:none;background:none;cursor:pointer;
+    font-size:22px;color:var(--gold-soft);
+    filter:drop-shadow(0 0 4px rgba(216,174,107,.6));
+    transition:opacity .3s, transform .3s;
+  }
+  .pickstar:disabled{opacity:0;pointer-events:none;transform:scale(.4);}
+  .reveal-line{font-family:var(--serif);font-size:16px;color:var(--ink);min-height:22px;opacity:0;transition:opacity .5s;}
+  .reveal-line.show{opacity:1;}
+
+  /* SCENE 3: pull thread */
+  .thread-track{
+    position:relative;width:6px;height:150px;
+    background:repeating-linear-gradient(var(--gold),var(--gold) 4px,transparent 4px,transparent 9px);
+    margin:8px auto 0;border-radius:3px;
+  }
+  .pendant{
+    position:absolute;left:50%;top:0;
+    transform:translate(-50%,0);
+    width:46px;height:46px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,var(--gold-soft),var(--gold));
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;color:#221604;font-weight:700;
+    cursor:grab;touch-action:none;
+    box-shadow:0 0 18px rgba(216,174,107,.5);
+  }
+  .pendant.done{cursor:default;}
+
+  /* SCENE 4: letter */
+  .letter{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(216,174,107,.25);
+    border-radius:14px;
+    padding:22px 20px;
+    text-align:left;
+  }
+  .letter p{
+    font-family:var(--serif);
+    font-size:14.5px;
+    line-height:1.75;
+    color:var(--ink);
+    margin:0 0 12px;
+  }
+  .letter p:last-child{margin-bottom:0;}
+
+  /* SCENE 5: moments */
+  .polaroids{display:flex;gap:14px;}
+  .polaroid{
+    background:#f3efe4;
+    padding:8px 8px 22px;
+    border-radius:3px;
+    width:120px;
+    box-shadow:0 8px 18px rgba(0,0,0,.35);
+    transform:rotate(-3deg);
+  }
+  .polaroid:nth-child(2){transform:rotate(3deg);}
+  .polaroid .frame{
+    position:relative;width:100%;aspect-ratio:1/1.05;
+    background:#000;border-radius:1px;overflow:hidden;
+  }
+  .polaroid img{width:100%;height:100%;object-fit:cover;display:block;}
+  .polaroid canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:pointer;}
+  .polaroid .cap{
+    display:block;text-align:center;margin-top:8px;
+    font-family:var(--serif);font-size:11px;color:#33301f;
+  }
+
+  /* SCENE 6: question */
+  .slide-outer{position:relative;width:280px;margin-top:4px;}
+  .slide-track{
+    position:relative;width:100%;height:52px;border-radius:999px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(216,174,107,.3);
+    overflow:hidden;
+    display:flex;align-items:center;
+  }
+  .slide-fill{
+    position:absolute;left:0;top:0;bottom:0;width:0;
+    background:linear-gradient(90deg,rgba(216,174,107,.25),rgba(216,174,107,.55));
+  }
+  .slide-label{
+    position:relative;z-index:1;width:100%;text-align:center;
+    font-size:13px;color:var(--ink-muted);pointer-events:none;
+  }
+  .slide-handle{
+    position:absolute;left:3px;top:3px;
+    width:46px;height:46px;border-radius:50%;
+    background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+    border:none;color:#221604;font-size:18px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:grab;touch-action:none;z-index:2;
+  }
+  .dodge-wrap{position:relative;width:280px;height:56px;margin-top:2px;}
+  #dodgeBtn{position:absolute;left:50%;top:0;transform:translateX(-50%);white-space:nowrap;}
+
+  /* SCENE 7: final */
+  .hearts{position:relative;width:100%;height:0;}
+  .fh{
+    position:absolute;bottom:0;font-size:18px;opacity:0;
+    animation:floatup 2.6s ease-in forwards;
+  }
+  @keyframes floatup{
+    0%{opacity:0;transform:translateY(0) scale(.6);}
+    15%{opacity:1;}
+    100%{opacity:0;transform:translateY(-140px) scale(1);}
+  }
+  a.btn{display:inline-block;text-decoration:none;}
+
+  @media (prefers-reduced-motion:reduce){
+    .star{animation:none;opacity:.5;}
+    #vinyl.spinning{animation:none;}
+    .scene.active{animation:none;}
+    .fh{animation:none;display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="sky"></div>
+<div id="progress"></div>
+<button id="soundBtn" aria-label="Aktifkan/matikan suara">🔊</button>
+<audio id="bgm" loop preload="auto" src="song.mp3"></audio>
+<p id="audioHint" style="position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:11px;color:#a6adcf;opacity:.85;z-index:5;display:none;padding:0 20px;">musik nggak jalan? pastikan file song.mp3 ada di folder yang sama dengan index.html.</p>
+
+<div id="app">
+
+  <!-- SCENE 1 -->
+  <section class="scene active" data-scene="1">
+    <h1>Halo, Cilpy.</h1>
+    <p class="sub">Ada sesuatu yang pengen aku sampein, tapi lewat cara yang agak beda dari biasanya. Puter dulu piringannya, ya.</p>
+    <div class="vinyl-wrap">
+      <button id="vinylBtn" aria-label="Putar musik">
+        <svg id="vinyl" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="98" fill="#0c0c10"/>
+          <circle cx="100" cy="100" r="82" fill="none" stroke="#22222a" stroke-width="1.5"/>
+          <circle cx="100" cy="100" r="68" fill="none" stroke="#22222a" stroke-width="1.5"/>
+          <circle cx="100" cy="100" r="54" fill="none" stroke="#22222a" stroke-width="1.5"/>
+          <circle cx="100" cy="100" r="40" fill="none" stroke="#22222a" stroke-width="1.5"/>
+          <circle cx="100" cy="100" r="26" fill="#d8ae6b"/>
+          <circle cx="100" cy="100" r="4.5" fill="#0c0c10"/>
+          <text x="100" y="103" text-anchor="middle" font-size="9" fill="#221604" font-family="Georgia, serif">for Cilpy</text>
+        </svg>
+      </button>
+    </div>
+    <p class="hint-tap">(ketuk piringannya)</p>
+    <button class="btn" id="toScene2" hidden>Lanjut</button>
+  </section>
+
+  <!-- SCENE 2 -->
+  <section class="scene" data-scene="2">
+    <h1>Coba tebak dulu.</h1>
+    <p class="sub">Ketuk semua bintangnya, satu-satu, buat lihat kata rahasianya.</p>
+    <div class="tiles" id="tiles"></div>
+    <div class="starfield" id="starfield"></div>
+    <p class="reveal-line" id="revealLine">Kamu CANTIK buat aku.</p>
+    <button class="btn" id="toScene3" hidden>Lanjut</button>
+  </section>
+
+  <!-- SCENE 3 -->
+  <section class="scene" data-scene="3">
+    <h1>Ada kejutan kecil.</h1>
+    <p class="sub">Tahan bandulnya, terus tarik ke bawah buat buka.</p>
+    <div class="thread-track" id="threadTrack">
+      <div class="pendant" id="pendant">↓</div>
+    </div>
+    <button class="btn" id="toScene4" hidden>Baca suratnya</button>
+  </section>
+
+  <!-- SCENE 4 -->
+  <section class="scene" data-scene="4">
+    <h1>Isi hatiku.</h1>
+    <div class="letter">
+      <p>kondisi gunung Krakatau wes Ra aman, kondisimu piye?</p>
+      <p>aku ape ngomong pi.yo wes ngerti lah seharus koe lek aku gawe web koyo ngene masio bantuan ai 😁. sebener e aku seneng koe mboh Yoan kok Moro Moro ae seneng awal seneng iku pas mangan mangan ape budal psg aku ambek koen kan dep depan, tapi aku Yo ngerti lek koe iseh duwe pacar, dadi dino Iki aku Ket wani ngomong g penak ae lek ditahan, aku wes ngerti jawaban e aku Yo g mekso,</p>
+      <p>lek Maslah dulur awak Dewe ora dulur seh sebener e.</p>
+      <p>Yo wes ngunu tok ae 😁😁</p>
+      <p>sepurane lek wes tau hadir nak uripmu aku Yo terimakasih nak koe wes hadir nak Urip ku. makasih banget buat Silpy 😁😁</p>
+    </div>
+    <button class="btn" id="toScene5">Lanjut</button>
+  </section>
+
+  <!-- SCENE 5 -->
+  <section class="scene" data-scene="5">
+    <h1>Momen yang aku suka.</h1>
+    <p class="sub">Gosok fotonya buat lihat.</p>
+    <div class="polaroids">
+      <div class="polaroid">
+        <div class="frame">
+          <img src="photo1.jpg" alt="Kenangan 1">
+          <canvas class="scratch" data-target="1"></canvas>
+        </div>
+        <span class="cap">salah satu favoritku</span>
+      </div>
+      <div class="polaroid">
+        <div class="frame">
+          <img src="photo2.jpg" alt="Kenangan 2">
+          <canvas class="scratch" data-target="2"></canvas>
+        </div>
+        <span class="cap">ini juga favoritku</span>
+      </div>
+    </div>
+    <button class="btn" id="toScene6">Lanjut</button>
+  </section>
+
+  <!-- SCENE 6 -->
+  <section class="scene" data-scene="6">
+    <h1>Satu pertanyaan terakhir.</h1>
+    <p class="sub">Maukah kamu jadi pacarku, Cilpy?</p>
+    <div class="slide-outer">
+      <div class="slide-track" id="slideTrack">
+        <div class="slide-fill" id="slideFill"></div>
+        <div class="slide-label">geser buat jawab →</div>
+        <button class="slide-handle" id="slideHandle" aria-label="Geser untuk menjawab iya">➜</button>
+      </div>
+    </div>
+    <div class="dodge-wrap" id="dodgeWrap">
+      <button class="btn ghost" id="dodgeBtn">enggak dulu deh</button>
+    </div>
+  </section>
+
+  <!-- SCENE 7 -->
+  <section class="scene" data-scene="7">
+    <div class="hearts" id="hearts"></div>
+    <h1>Yeay! 🎉</h1>
+    <p class="sub">Makasih udah mau baca semua ini sampai akhir. Ini artinya banyak buat aku.</p>
+    <a class="btn" id="waBtn" href="#" target="_blank" rel="noopener">Kirim ke WhatsApp</a>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var totalScenes = 7;
+  var progress = document.getElementById('progress');
+  for(var i=1;i<=totalScenes;i++){
+    var d = document.createElement('div');
+    d.className = 'dot'+(i===1?' on':'');
+    d.dataset.n = i;
+    progress.appendChild(d);
+  }
+  function setProgress(n){
+    var dots = progress.querySelectorAll('.dot');
+    dots.forEach(function(dot){
+      dot.classList.toggle('on', parseInt(dot.dataset.n,10) <= n);
+    });
+  }
+
+  function goTo(n){
+    document.querySelectorAll('.scene').forEach(function(s){
+      s.classList.toggle('active', parseInt(s.dataset.scene,10) === n);
+    });
+    setProgress(n);
+    window.scrollTo(0,0);
+  }
+
+  // starry sky background
+  var sky = document.getElementById('sky');
+  var starCount = 70;
+  for(var i=0;i<starCount;i++){
+    var s = document.createElement('div');
+    s.className='star';
+    var size = Math.random()*2.2+1;
+    s.style.width = size+'px';
+    s.style.height = size+'px';
+    s.style.left = (Math.random()*100)+'%';
+    s.style.top = (Math.random()*100)+'%';
+    s.style.animationDelay = (Math.random()*3.5)+'s';
+    sky.appendChild(s);
+  }
+
+  // audio
+  var bgm = document.getElementById('bgm');
+  var audioHint = document.getElementById('audioHint');
+  var soundBtn = document.getElementById('soundBtn');
+  var vinylBtn = document.getElementById('vinylBtn');
+  var vinyl = document.getElementById('vinyl');
+  var toScene2 = document.getElementById('toScene2');
+  var started = false;
+
+  bgm.addEventListener('error', function(){ audioHint.style.display='block'; });
+
+  function attemptPlay(){
+    bgm.load();
+    var p = bgm.play();
+    if(p && p.catch){
+      p.then(function(){ audioHint.style.display='none'; })
+       .catch(function(){ audioHint.style.display='block'; });
+    }
+  }
+
+  vinylBtn.addEventListener('click', function(){
+    if(!started){
+      started = true;
+      attemptPlay();
+      vinyl.classList.add('spinning');
+      toScene2.hidden = false;
+    } else {
+      togglePlay();
+    }
+  });
+  function togglePlay(){
+    if(bgm.paused){ attemptPlay(); vinyl.classList.add('spinning'); soundBtn.textContent='🔊'; }
+    else { bgm.pause(); vinyl.classList.remove('spinning'); soundBtn.textContent='🔇'; }
+  }
+  soundBtn.addEventListener('click', togglePlay);
+
+  toScene2.addEventListener('click', function(){ goTo(2); });
+
+  // SCENE 2: star puzzle
+  var word = ['C','A','N','T','I','K'];
+  var tilesEl = document.getElementById('tiles');
+  word.forEach(function(){
+    var t = document.createElement('div');
+    t.className='tile';
+    t.textContent='';
+    tilesEl.appendChild(t);
+  });
+  var tileEls = tilesEl.querySelectorAll('.tile');
+  var starfield = document.getElementById('starfield');
+  var positions = [
+    {top:'6%',left:'10%'},{top:'2%',left:'62%'},{top:'40%',left:'2%'},
+    {top:'46%',left:'78%'},{top:'78%',left:'22%'},{top:'70%',left:'58%'}
+  ];
+  var filled = 0;
+  var revealLine = document.getElementById('revealLine');
+  var toScene3 = document.getElementById('toScene3');
+  positions.forEach(function(pos, idx){
+    var b = document.createElement('button');
+    b.className='pickstar';
+    b.style.top = pos.top;
+    b.style.left = pos.left;
+    b.textContent = '✦';
+    b.setAttribute('aria-label','Bintang rahasia');
+    b.addEventListener('click', function(){
+      if(b.disabled) return;
+      tileEls[idx].textContent = word[idx];
+      b.disabled = true;
+      filled++;
+      if(filled === word.length){
+        revealLine.classList.add('show');
+        toScene3.hidden = false;
+      }
+    });
+    starfield.appendChild(b);
+  });
+  toScene3.addEventListener('click', function(){ goTo(3); });
+
+  // SCENE 3: pull thread
+  var pendant = document.getElementById('pendant');
+  var threadTrack = document.getElementById('threadTrack');
+  var toScene4 = document.getElementById('toScene4');
+  var dragging = false, startY = 0, maxDrag = 0, doneThread = false;
+
+  function trackHeight(){ return threadTrack.clientHeight - pendant.clientHeight; }
+
+  pendant.addEventListener('pointerdown', function(e){
+    if(doneThread) return;
+    dragging = true;
+    startY = e.clientY;
+    pendant.setPointerCapture(e.pointerId);
+  });
+  pendant.addEventListener('pointermove', function(e){
+    if(!dragging || doneThread) return;
+    var delta = Math.max(0, e.clientY - startY);
+    maxDrag = trackHeight();
+    var y = Math.min(delta, maxDrag);
+    pendant.style.transform = 'translate(-50%,'+y+'px)';
+    if(y >= maxDrag*0.92){
+      completeThread();
+    }
+  });
+  function endDrag(){
+    if(!dragging || doneThread) return;
+    dragging = false;
+    pendant.style.transition='transform .35s ease';
+    pendant.style.transform='translate(-50%,0)';
+    setTimeout(function(){ pendant.style.transition=''; },350);
+  }
+  pendant.addEventListener('pointerup', endDrag);
+  pendant.addEventListener('pointercancel', endDrag);
+  function completeThread(){
+    doneThread = true;
+    dragging = false;
+    pendant.classList.add('done');
+    pendant.textContent = '✦';
+    pendant.style.transition='transform .35s ease';
+    pendant.style.transform='translate(-50%,'+trackHeight()+'px)';
+    toScene4.hidden = false;
+  }
+  toScene4.addEventListener('click', function(){ goTo(4); });
+
+  document.getElementById('toScene5').addEventListener('click', function(){ goTo(5); });
+  document.getElementById('toScene6').addEventListener('click', function(){ goTo(6); });
+
+  // SCENE 5: scratch reveal
+  document.querySelectorAll('canvas.scratch').forEach(function(canvas){
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var revealed = false;
+    var moveCount = 0;
+
+    function size(){
+      var rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width*dpr;
+      canvas.height = rect.height*dpr;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      paintOverlay(rect.width, rect.height);
+    }
+    function paintOverlay(w,h){
+      var g = ctx.createLinearGradient(0,0,w,h);
+      g.addColorStop(0,'#2a2140');
+      g.addColorStop(1,'#0e1230');
+      ctx.globalCompositeOperation='source-over';
+      ctx.fillStyle=g;
+      ctx.fillRect(0,0,w,h);
+      ctx.fillStyle='rgba(216,174,107,.85)';
+      ctx.font='11px Georgia, serif';
+      ctx.textAlign='center';
+      ctx.fillText('gosok', w/2, h/2 - 4);
+      ctx.fillText('di sini ✦', w/2, h/2 + 12);
+    }
+    function scratchAt(x,y){
+      ctx.globalCompositeOperation='destination-out';
+      ctx.beginPath();
+      ctx.arc(x,y,18,0,Math.PI*2);
+      ctx.fill();
+    }
+    function pos(e){
+      var rect = canvas.getBoundingClientRect();
+      return {x:e.clientX-rect.left, y:e.clientY-rect.top};
+    }
+    var down=false;
+    canvas.addEventListener('pointerdown', function(e){ down=true; var p=pos(e); scratchAt(p.x,p.y); });
+    canvas.addEventListener('pointermove', function(e){
+      if(!down || revealed) return;
+      var p=pos(e); scratchAt(p.x,p.y);
+      moveCount++;
+      if(moveCount>28){
+        revealed=true;
+        canvas.style.transition='opacity .5s ease';
+        canvas.style.opacity='0';
+        setTimeout(function(){ canvas.style.pointerEvents='none'; },500);
+      }
+    });
+    window.addEventListener('pointerup', function(){ down=false; });
+    size();
+    window.addEventListener('resize', size);
+  });
+
+  // SCENE 6: slide to confirm
+  var slideTrack = document.getElementById('slideTrack');
+  var slideHandle = document.getElementById('slideHandle');
+  var slideFill = document.getElementById('slideFill');
+  var sDragging=false, sStartX=0, sHandleStart=0;
+  function maxX(){ return slideTrack.clientWidth - slideHandle.clientWidth - 6; }
+  slideHandle.addEventListener('pointerdown', function(e){
+    sDragging=true; sStartX=e.clientX;
+    sHandleStart = parseFloat(slideHandle.style.left||'3');
+    slideHandle.setPointerCapture(e.pointerId);
+  });
+  slideHandle.addEventListener('pointermove', function(e){
+    if(!sDragging) return;
+    var delta = e.clientX - sStartX;
+    var x = Math.min(Math.max(3, sHandleStart+delta), maxX());
+    slideHandle.style.left = x+'px';
+    slideFill.style.width = (x+slideHandle.clientWidth/2)+'px';
+    if(x >= maxX()*0.9){
+      finishSlide();
+    }
+  });
+  function slideEnd(){
+    if(!sDragging) return;
+    sDragging=false;
+    slideHandle.style.transition='left .3s ease';
+    slideHandle.style.left='3px';
+    slideFill.style.transition='width .3s ease';
+    slideFill.style.width='0px';
+    setTimeout(function(){ slideHandle.style.transition=''; slideFill.style.transition=''; },300);
+  }
+  slideHandle.addEventListener('pointerup', slideEnd);
+  slideHandle.addEventListener('pointercancel', slideEnd);
+  function finishSlide(){
+    sDragging=false;
+    slideHandle.style.transition='left .2s ease';
+    slideHandle.style.left = maxX()+'px';
+    slideFill.style.transition='width .2s ease';
+    slideFill.style.width = slideTrack.clientWidth+'px';
+    setTimeout(function(){ goTo(7); spawnHearts(); },400);
+  }
+
+  // dodge button
+  var dodgeBtn = document.getElementById('dodgeBtn');
+  var dodgeWrap = document.getElementById('dodgeWrap');
+  var dodgeTexts = ['enggak dulu deh','yakin nih?','coba lagi deh','susah ya carinya? 😅','geser aja ke kanan~'];
+  var dodgeCount=0;
+  function dodge(){
+    var wrapRect = dodgeWrap.getBoundingClientRect();
+    var btnRect = dodgeBtn.getBoundingClientRect();
+    var maxLeft = wrapRect.width - btnRect.width;
+    var newLeft = Math.random()*Math.max(maxLeft,0);
+    dodgeBtn.style.position='absolute';
+    dodgeBtn.style.left = newLeft+'px';
+    dodgeBtn.style.top = (Math.random()*10)+'px';
+    dodgeBtn.style.transform='none';
+    dodgeCount++;
+    if(dodgeCount < dodgeTexts.length){ dodgeBtn.textContent = dodgeTexts[dodgeCount]; }
+  }
+  dodgeBtn.addEventListener('pointerenter', dodge);
+  dodgeBtn.addEventListener('click', function(e){ e.preventDefault(); dodge(); });
+
+  // final scene hearts + WA link
+  function spawnHearts(){
+    var hearts = document.getElementById('hearts');
+    hearts.innerHTML='';
+    for(var i=0;i<10;i++){
+      (function(){
+        var h = document.createElement('div');
+        h.className='fh';
+        h.textContent = Math.random()>0.5 ? '💛' : '✦';
+        h.style.left = (10+Math.random()*80)+'%';
+        h.style.animationDelay = (Math.random()*0.8)+'s';
+        hearts.appendChild(h);
+        setTimeout(function(){ h.remove(); }, 3200);
+      })();
+    }
+  }
+  var waBtn = document.getElementById('waBtn');
+  var waMsg = "Aku udah jawab pertanyaan kamu... jawabannya 'iya' 💛";
+  waBtn.href = 'https://wa.me/6282228522720?text=' + encodeURIComponent(waMsg);
+
+})();
+</script>
+</body>
+</html>
